@@ -1,12 +1,12 @@
 package ru.disasm.civ.lzw;
 
+import ru.disasm.civ.AbstractContainer;
 import java.io.*;
 import java.util.*;
 
-public class LzwContainer implements Closeable {
+public class LzwContainer extends AbstractContainer {
 
-    private final FileInputStream fin;
-    private VgaPaletteEntry[] vgaPaletteEntries = new VgaPaletteEntry[256];
+    private VgaPaletteEntry[] vgaPaletteEntries;
     private List<LzwEntry> dictionary;
     private boolean doubled;
     private int picSize;
@@ -15,7 +15,7 @@ public class LzwContainer implements Closeable {
     private byte lzwMaxDictBitnes;
     private int lzwCurword;
     private byte lzwBitremainOfCurword;
-    private Deque<Byte> stack = new ArrayDeque<>();
+    private Deque<Byte> stack;
     private byte lzwCurDictBitnes;
     private int maxLzwDictionaryCode;
     private int lastCode =0;
@@ -23,28 +23,8 @@ public class LzwContainer implements Closeable {
     private int repeatCnt = 0;
     private byte repeatedByte = 0;
 
-
-    public LzwContainer(File inFile) throws FileNotFoundException {
-        fin = new FileInputStream(inFile);
-        init();
-    }
-
-    private void secureRead(byte[] buf) throws IOException {
-        int res = fin.read(buf);
-        if (res==0) {
-            throw new IOException("Unexpected end of file");
-        }
-    }
-
-    private int readWord(byte[] buf) throws IOException {
-        secureRead(buf);
-        return (buf[0] & 0xff) + ((buf[1]  << 8) & 0xff00);
-    }
-
-    private void secureSkip(int len) throws IOException {
-        if (fin.skip(len)!=len) {
-            throw new IOException("Uexpected end of file");
-        }
+    LzwContainer(File inFile) throws FileNotFoundException {
+        super(inFile);
     }
 
     private void initDictionary() {
@@ -59,7 +39,9 @@ public class LzwContainer implements Closeable {
         maxLzwDictionaryCode = 0x01ff;
     }
 
-    private void init() {
+    protected void init() {
+        vgaPaletteEntries = new VgaPaletteEntry[256];
+        stack = new ArrayDeque<>();
         while (true) {
             byte[] cmd = new byte[2];
             try {
@@ -149,7 +131,7 @@ public class LzwContainer implements Closeable {
         return stack.pop();
     }
 
-    public void lzwDecodeLine(int length, byte[] buf, int startpos) throws IOException {
+    void lzwDecodeLine(int length, byte[] buf, int startpos) throws IOException {
         int resLen = length;
         if (doubled) {
             resLen++;
@@ -188,27 +170,15 @@ public class LzwContainer implements Closeable {
         }
     }
 
-    @Override
-    public void close() {
-        try {
-            if (fin != null) {
-                fin.close();
-            }
-        }
-        catch (IOException ioe) {
-            System.err.println("Error while closing stream: " + ioe);
-        }
-    }
-
-    public int getPicWidth() {
+    int getPicWidth() {
         return picWidth;
     }
 
-    public int getPicHeight() {
+    int getPicHeight() {
         return picHeight;
     }
 
-    public VgaPaletteEntry[] getVgaPaletteEntries() {
+    VgaPaletteEntry[] getVgaPaletteEntries() {
         return vgaPaletteEntries;
     }
 }
