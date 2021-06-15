@@ -43,7 +43,7 @@ class CivFont {
                 }
                 int renderedWidth = symbolwidth-fontIntevalX;
                 int locX = 0;
-                while (locX<renderedWidth){
+                while (locX<renderedWidth && x<renderWidth){
                     int bit = ((0xff & fontSprite[pos])<<(innerpos+1)) & 0x100;
                     if (bit!=0){
                         bao.write(blackPal);
@@ -57,7 +57,7 @@ class CivFont {
                     x++;
                     locX++;
                 }
-                while (locX<symbolwidth){
+                while (locX<symbolwidth && x<renderWidth){
                     bao.write(whitePal);
                     locX++;
                     x++;
